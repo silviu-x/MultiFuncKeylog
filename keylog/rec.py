@@ -1,33 +1,44 @@
+# Importa dxcam per catturare lo schermo
 import dxcam
+# Importa OpenCV per salvare il video
 import cv2
+# Importa NumPy per manipolazione array (frame)
 import numpy as np
-import pyautogui  # add this for fallback
+# Importa pyautogui come fallback per ottenere dimensione schermo
+import pyautogui
 
-# Create camera instance
+# Crea un'istanza della camera (cattura schermo)
 camera = dxcam.create()
 
-# Get screen size safely
+# Ottieni le dimensioni dello schermo in modo sicuro
 try:
+    # dxcam fornisce le dimensioni del monitor target
     screen_width, screen_height = camera.target.width, camera.target.height
 except AttributeError:
+    # Se dxcam non riesce, usa pyautogui come fallback
     screen_width, screen_height = pyautogui.size()
 
-# Define video writer for MP4
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # MP4 codec
+# Definisce il codec video e il writer per salvare in MP4
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec MP4
 out = cv2.VideoWriter('screen_record.mp4', fourcc, 30.0, (screen_width, screen_height))
 
-# Start capturing
+# Avvia la cattura continua con dxcam
 camera.start()
 
 try:
+    # Ciclo infinito per scrivere frame nel video
     while True:
-        frame = camera.get_latest_frame()
+        frame = camera.get_latest_frame()  # Ottieni l'ultimo frame catturato
         if frame is not None:
-            # Convert RGB (dxcam) to BGR (OpenCV)
+            # dxcam cattura in RGB, OpenCV usa BGR: conversione necessaria
             frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            # Scrive il frame nel file video
             out.write(frame_bgr)
+
+# Permette di interrompere con Ctrl+C
 except KeyboardInterrupt:
     print("Stopping recording...")
 
+# Ferma la cattura e rilascia il file video
 camera.stop()
 out.release()
